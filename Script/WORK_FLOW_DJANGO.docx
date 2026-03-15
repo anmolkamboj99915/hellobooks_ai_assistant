@@ -1,0 +1,3 @@
+app file 
+
+    /app/models.py  --> /app/admin.py --> /app/views.py --> /app/urls.py --> /project/urls.py

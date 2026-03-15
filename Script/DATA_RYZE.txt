@@ -1,0 +1,225 @@
+COMMON_FOR_VARIOUS_PROJECTS
+
+AI WORKING COMAND - 
+    Role: You are acting as a Senior Lead Full-Stack Engineer. Your goal is to provide high-density, technical solutions with zero conversational filler.
+    Operational Directives:
+        Internalize: Read the project structure and map dependencies immediately. Do not summarize unless asked.
+        No Conversational Filler: Skip phrases like "I understand" or "Here is the code."
+        Logic First: If a requested change conflicts with the existing architecture, flag the conflict immediately.
+        Code-Centric: Provide full, copy-pasteable blocks for modified files.
+        Workflow: I will provide the project structure now. Respond ONLY with: Project Map Internalized. Standing by for instructions.
+
+    THEN WITH .TXT FILE - 
+        Here is the project structure and codebase. Internalize this map. Do not summarize. Await my first task.
+    
+    
+    before uploading on git use - 
+        pip freeze > requirements.txt
+
+
+    install git system
+        winget install --id Git.Git -e --source winget
+        git --version
+
+        RUN - GIT USING-
+            git init
+            git add .
+            git commit -m "Initial commit"
+
+        For making changes using gitignore to remove the files from made repo
+            git rm -r --cached 
+            git add .
+            git commit -m "Fix gitignore"
+
+        check .gitignore file being used
+            git check-ignore -v backend/.env
+        
+        to check if anything is uploadd
+            git status
+
+        
+        to finally set:
+            git init
+            change global git config using comand and the path of project location:
+                git config --global --add safe.directory "E:/projects_praactice/projects_100_Angela/JobBoard_Projet"
+
+                git remote add origin https://github.com/anmolkamboj99915/Job_Board
+                git remote add origin https://github.com/anmolkamboj99915/Job_Board
+            git add
+            git commit -m "Initial full-stack setup for AI_UI_GENERATOR"
+            git branch -M main
+            git pull origin main --allow-unrelated-histories
+            git add .
+            git commit -m "Resolved merge conflict"
+            git push -u origin main
+            git add .
+            git commit -m "your message"
+            git push
+
+         🚀 FULL CLEAN TEMPLATE (COPY FOR FUTURE)
+            cd project_folder
+            Remove-Item -Recurse -Force .git
+            git init
+            git config --global user.name "anmolkamboj99915"
+            git config --global user.email "anmolkamboj99915@gmail.com"
+            git add .
+            git config --global --add safe.directory E:/projects_praactice/projects_100_Angela/JobBoard_Project
+            git commit -m "Initial commit"
+            git remote add origin https://github.com/username/repo.git
+            git branch -M main
+            git push -u origin main --force
+
+        python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+
+        root level full synch 
+            git add -A
+            git commit -m "Full project sync"
+            git push origin main
+
+
+        
+
+        to fix any issues in render loading 
+            git log --oneline
+
+
+
+FOR RYZZ_AI_UI_PROJECT    
+    way to install java and making it peranent 
+        winget install Microsoft.OpenJDK.17
+        setx JAVA_HOME "C:\Program Files\Microsoft\jdk-17"
+
+        version verify
+            java -version
+            javac -version
+
+
+    to be added in environment variables if not present there - C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot\bin
+
+
+    to reliabley check java present or not use - Get-Command java
+
+
+    ways to setup and install node.js
+        winget install OpenJS.NodeJS.LTS
+
+        framework choosen -- React
+        variant choosen   -- JavaScript + SWC(Speedy Web Compiler)
+        Vite 8 beta is experimental - May have breaking changes choose No
+
+        npm install
+        npm run dev
+        node -v for version info
+        
+
+        if port already in use - npm run dev -- --port 5174
+
+
+    install tailwind css - npm install -
+        D tailwindcss postcss autoprefixer npx tailwindcss init -p
+
+        get ist - npm list tailwindcss
+                npm install -D @tailwindcss/postcss
+
+
+
+    AT PHASE_2 COMPLETION NEW CHAAT BEGIN - 
+        This is my project after completing Phase 2 of 01_AI Agent Architecture Guide.
+        It includes planner, queue, processor, cancellation, logging, and failure handling.
+        Now begin Phase 3 — Real AI Integration Layer without breaking existing architecture.
+
+
+    backend_setup -- 
+        cd backend
+        npm init -y
+        npm install express cors openai dotenv
+
+        npm install dotenv
+
+
+    
+
+    fallback system development 
+        npm install axios
+
+        install minstral -- 
+            npm install @mistralai/mistralai
+
+
+FOR_BOOK_MY_SEAT
+
+installation modules - 
+    pip install django
+    pip install dj-database-url
+    pip install psycopg2-binary
+    pip install pillow
+    pip install stripe
+    pip install python-dotenv
+    pip install gunicorn
+    pip install dj-database-url psycopg2-binary
+    pip install psycopg2-binary dj-database-url whitenoise gunicorn
+    npm install -g vercel
+    vercel login
+
+
+    pip freeze > requirements.txt
+
+
+
+VERCEL SETUP:
+    npm install -g vercel
+    vercel login
+    vercel link
+    vercel env pull .env.production --environment=production
+    $env:DATABASE_URL = (Get-Content .env.production | Select-String DATABASE_URL).ToString().Split("=")[1]
+    python manage.py migrate
+
+    BUILD COMAND ON VERCEL TO PLACE - python manage.py collectstatic --noinput
+
+
+
+
+
+
+
+running ways - 
+    python manage.py collectstatic
+    python manage.py migrate
+    python manage.py makemigrations
+
+    python manage.py runserver
+
+root level full synch 
+    TO CHECK ISSUES
+        python manage.py check
+
+
+
+            python manage.py collectstatic
+            python manage.py migrate
+            python manage.py makemigrations
+            git add -A
+            git commit -m "Full project sync"
+            git push origin main
+
+        IF MAIN ISSUE ARISE - 
+            git pull origin main --rebase
+
+
+Comand to create django secret key 
+    python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+
+to create admin - python manage.py createsuperuser
+    username admin - Anmoljaiya
+    username admin 2 - Anmolkamboj
+    password - Anmol@2556   
+    Username: admin
+    Password: admin123
+
+
+
+MONGODB - 
+    CONNECTION STRING - 
+        mongodb+srv://anmolkamboj99915_db_user:4ujiCbCBHvM1V0kk@cluster0.uuc6viz.mongodb.net/

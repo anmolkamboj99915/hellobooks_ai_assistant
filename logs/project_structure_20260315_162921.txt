@@ -1,0 +1,1857 @@
+📦 Project Snapshot: Sun Mar 15 16:29:53 2026
+Root: D:\projects_praactice\projects_100_Angela\MeruTechnologyPrivateLimited_Assignment\New_assignment_python\hellobooks-ai-assistant
+
+📁 hellobooks-ai-assistant (root)
+    📄 .env
+    📄 Dockerfile
+    📄 README.md
+        --- BEGIN CONTENT ---
+        --- END CONTENT ---
+    📄 requirements.txt
+        ⚠️ Skipped: Binary detected
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 gh25337/  ← skipped (excluded folder)
+                                    📁 gh26920/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                        📁 modules/  ← skipped (excluded folder)
+                                            📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                                📁 modules/  ← skipped (excluded folder)
+                                                    📁 container/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                        📁 modules/  ← skipped (excluded folder)
+                            📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+    📁 app/
+        📄 config.py
+            --- BEGIN CONTENT ---
+            import os
+            from pathlib import Path
+            from dotenv import load_dotenv
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            
+            # --------------------------------------------------
+            # Base Directory
+            # --------------------------------------------------
+            
+            BASE_DIR = Path(__file__).resolve().parent.parent
+            
+            # --------------------------------------------------
+            # Load environment variables
+            # --------------------------------------------------
+            
+            ENV_FILE = BASE_DIR / ".env"
+            
+            if ENV_FILE.exists():
+                load_dotenv(ENV_FILE)
+                logger.info(".env configuration loaded.")
+            else:
+                raise FileNotFoundError(
+                    f".env file not found at expected location: {ENV_FILE}"
+                )
+            
+            # --------------------------------------------------
+            # API Configuration
+            # --------------------------------------------------
+            
+            OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+            
+            if not OPENAI_API_KEY:
+                logger.warning(
+                    "OPENAI_API_KEY not found. OpenAI provider disabled. "
+                    "Fallback providers may be used."
+                )
+            
+            # --------------------------------------------------
+            # Project Paths
+            # --------------------------------------------------
+            
+            KNOWLEDGE_BASE_PATH = BASE_DIR / "knowledge_base"
+            VECTOR_STORE_PATH = BASE_DIR / "vector_store"
+            
+            # Validate knowledge base
+            if not KNOWLEDGE_BASE_PATH.exists():
+                raise FileNotFoundError(
+                    f"Knowledge base directory not found: {KNOWLEDGE_BASE_PATH}"
+                )
+            
+            # Ensure vector store exists
+            VECTOR_STORE_PATH.mkdir(parents=True, exist_ok=True)
+            
+            # --------------------------------------------------
+            # Model Configuration
+            # --------------------------------------------------
+            
+            # Embedding model for document vectors
+            EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+            
+            # LLM model for answering questions
+            LLM_MODEL_NAME = "gpt-4o-mini"
+            
+            # Number of retrieved documents
+            TOP_K_RESULTS = 3
+            
+            # --------------------------------------------------
+            # Debug / Info Helper
+            # --------------------------------------------------
+            
+            def print_config_summary():
+                """
+                Prints configuration summary for debugging.
+                """
+            
+                print("\n----- Configuration Loaded -----")
+                print(f"Base Directory: {BASE_DIR}")
+                print(f"Knowledge Base Path: {KNOWLEDGE_BASE_PATH}")
+                print(f"Vector Store Path: {VECTOR_STORE_PATH}")
+                print(f"Embedding Model: {EMBEDDING_MODEL_NAME}")
+                print(f"LLM Model: {LLM_MODEL_NAME}")
+                print(f"Top K Retrieval: {TOP_K_RESULTS}")
+                print("--------------------------------\n")
+            --- END CONTENT ---
+        📄 embedder.py
+            --- BEGIN CONTENT ---
+            from sentence_transformers import SentenceTransformer
+            from typing import List
+            import logging
+            import numpy as np
+            
+            from .config import EMBEDDING_MODEL_NAME
+            
+            # --------------------------------------------------
+            # Logging Configuration
+            # --------------------------------------------------
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            # --------------------------------------------------
+            # Embedder Class
+            # --------------------------------------------------
+            
+            class Embedder:
+                """
+                Handles text embedding generation using SentenceTransformers.
+                Ensures embeddings are FAISS compatible (float32).
+                """
+            
+                def __init__(self):
+                    try:
+                        logger.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
+                        self.model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+                    except Exception as e:
+                        logger.error("Failed to load embedding model.")
+                        raise RuntimeError(f"Embedding model initialization failed: {e}")
+            
+                # --------------------------------------------------
+            
+                def embed_text(self, text: str) -> List[float]:
+                    """
+                    Convert a single text string into an embedding vector.
+                    """
+            
+                    if not isinstance(text, str) or not text.strip():
+                        raise ValueError("Input text must be a non-empty string.")
+            
+                    try:
+            
+                        embedding = self.model.encode(
+                            text,
+                            convert_to_numpy=True
+                        )
+            
+                        # Ensure FAISS compatible dtype
+                        embedding = embedding.astype("float32")
+            
+                        return embedding.tolist()
+            
+                    except Exception as e:
+                        logger.error("Error generating embedding for text.")
+                        raise RuntimeError(f"Embedding generation failed: {e}")
+            
+                # --------------------------------------------------
+            
+                def embed_documents(self, documents: List[str]) -> List[List[float]]:
+                    """
+                    Generate embeddings for multiple documents.
+                    """
+            
+                    if not documents:
+                        raise ValueError("Document list cannot be empty.")
+            
+                    if not all(isinstance(doc, str) and doc.strip() for doc in documents):
+                        raise ValueError("All documents must be valid non-empty strings.")
+            
+                    try:
+            
+                        embeddings = self.model.encode(
+                            documents,
+                            convert_to_numpy=True,
+                            batch_size=32,
+                            show_progress_bar=False
+                        )
+            
+                        # Ensure FAISS compatible dtype
+                        embeddings = embeddings.astype("float32")
+            
+                        return embeddings.tolist()
+            
+                    except Exception as e:
+                        logger.error("Error generating embeddings for document batch.")
+                        raise RuntimeError(f"Batch embedding failed: {e}")
+            --- END CONTENT ---
+        📄 llm.py
+            --- BEGIN CONTENT ---
+            import logging
+            import os
+            from typing import List
+            
+            from .config import OPENAI_API_KEY, LLM_MODEL_NAME
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            class LLMClient:
+                """
+                LLM handler with multi-provider fallback.
+            
+                Priority order:
+                1️⃣ OpenAI
+                2️⃣ Mistral API
+                3️⃣ Local HuggingFace model
+                """
+            
+                def __init__(self):
+            
+                    self.provider = None
+                    self.client = None
+                    self.local_model = None
+                    self.tokenizer = None
+            
+                    mistral_key = os.getenv("MISTRAL_API_KEY")
+            
+                    # --------------------------------------------------
+                    # 1️⃣ OpenAI Provider
+                    # --------------------------------------------------
+            
+                    if OPENAI_API_KEY:
+                        try:
+                            from openai import OpenAI
+            
+                            self.client = OpenAI(api_key=OPENAI_API_KEY)
+                            self.provider = "openai"
+            
+                            logger.info("Using OpenAI provider.")
+                            return
+            
+                        except Exception as e:
+                            logger.warning(f"OpenAI initialization failed: {e}")
+            
+                    # --------------------------------------------------
+                    # 2️⃣ Mistral Provider
+                    # --------------------------------------------------
+            
+                    if mistral_key:
+                        try:
+                            from mistralai.client import MistralClient
+            
+                            self.client = MistralClient(api_key=mistral_key)
+                            self.provider = "mistral"
+            
+                            logger.info("Using Mistral API provider.")
+                            return
+            
+                        except Exception as e:
+                            logger.warning(f"Mistral initialization failed: {e}")
+            
+                    # --------------------------------------------------
+                    # 3️⃣ Local Model Fallback
+                    # --------------------------------------------------
+            
+                    try:
+                        logger.info("Falling back to local TinyLlama model.")
+            
+                        from transformers import AutoModelForCausalLM, AutoTokenizer
+                        import torch
+            
+                        model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+            
+                        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            
+                        # ensure pad token exists
+                        if self.tokenizer.pad_token is None:
+                            self.tokenizer.pad_token = self.tokenizer.eos_token
+            
+                        device = "cuda" if torch.cuda.is_available() else "cpu"
+            
+                        self.local_model = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float16 if device == "cuda" else torch.float32
+                        ).to(device)
+            
+                        self.provider = "local"
+            
+                        logger.info(f"Local TinyLlama loaded successfully on {device}.")
+            
+                    except Exception as e:
+                        logger.error("Failed to load any LLM provider.")
+                        raise RuntimeError(f"No LLM available: {e}")
+            
+                # --------------------------------------------------
+            
+                def generate_answer(self, question: str, context_documents: List[str]) -> str:
+                    """
+                    Generate answer using retrieved context documents.
+                    """
+            
+                    # ------------------------------
+                    # Validation
+                    # ------------------------------
+            
+                    if not isinstance(question, str) or not question.strip():
+                        raise ValueError("Question must be a non-empty string.")
+            
+                    if not context_documents:
+                        raise ValueError("Context documents cannot be empty.")
+            
+                    context = "\n\n".join(context_documents)
+            
+                    prompt = f"""
+            You are an AI bookkeeping assistant for a platform called Hellobooks.
+            
+            Use the provided context to answer the user's question clearly and accurately.
+            If the answer is not found in the context, say you do not have enough information.
+            
+            Context:
+            {context}
+            
+            Question:
+            {question}
+            
+            Answer:
+            """
+            
+                    # --------------------------------------------------
+                    # OpenAI
+                    # --------------------------------------------------
+            
+                    if self.provider == "openai":
+            
+                        try:
+            
+                            response = self.client.chat.completions.create(
+                                model=LLM_MODEL_NAME,
+                                messages=[
+                                    {"role": "system", "content": "You are a helpful accounting assistant."},
+                                    {"role": "user", "content": prompt},
+                                ],
+                                temperature=0.2,
+                            )
+            
+                            answer = response.choices[0].message.content.strip()
+            
+                            if not answer:
+                                raise ValueError("LLM returned an empty response.")
+            
+                            return answer
+            
+                        except Exception as e:
+                            logger.error(f"OpenAI generation failed: {e}")
+                            raise RuntimeError(f"OpenAI generation failed: {e}")
+            
+                    # --------------------------------------------------
+                    # Mistral API
+                    # --------------------------------------------------
+            
+                    if self.provider == "mistral":
+            
+                        try:
+            
+                            response = self.client.chat(
+                                model="mistral-medium",
+                                messages=[{"role": "user", "content": prompt}]
+                            )
+            
+                            answer = response.choices[0].message.content.strip()
+            
+                            if not answer:
+                                raise ValueError("Mistral returned an empty response.")
+            
+                            return answer
+            
+                        except Exception as e:
+                            logger.error(f"Mistral generation failed: {e}")
+                            raise RuntimeError(f"Mistral generation failed: {e}")
+            
+                    # --------------------------------------------------
+                    # Local Model
+                    # --------------------------------------------------
+            
+                    if self.provider == "local":
+            
+                        try:
+            
+                            inputs = self.tokenizer(prompt, return_tensors="pt")
+            
+                            # move tensors safely to model device
+                            inputs = {k: v.to(self.local_model.device) for k, v in inputs.items()}
+            
+                            outputs = self.local_model.generate(
+                                **inputs,
+                                max_new_tokens=200,
+                                temperature=0.3,
+                                pad_token_id=self.tokenizer.eos_token_id
+                            )
+            
+                            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+                            if "Answer:" in response:
+                                return response.split("Answer:")[-1].strip()
+            
+                            return response.strip()
+            
+                        except Exception as e:
+                            logger.warning(f"OpenAI failed, switching to fallback provider: {e}")
+            
+                            if os.getenv("MISTRAL_API_KEY"):
+                                self.provider = "mistral"
+                                return self.generate_answer(question, context_documents)
+            
+                            raise RuntimeError(f"OpenAI generation failed: {e}")
+            
+                    # --------------------------------------------------
+            
+                    raise RuntimeError("No LLM provider available.")
+            --- END CONTENT ---
+        📄 main.py
+            --- BEGIN CONTENT ---
+            import sys
+            import logging
+            
+            from .rag_pipeline import RAGPipeline
+            from .config import print_config_summary
+            
+            
+            # --------------------------------------------------
+            # Logging Configuration
+            # --------------------------------------------------
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            # --------------------------------------------------
+            # CLI Interface
+            # --------------------------------------------------
+            
+            def run_cli():
+                """
+                Runs the command line AI assistant.
+                """
+            
+                try:
+            
+                    print_config_summary()
+            
+                    # Initialize pipeline
+                    try:
+                        rag = RAGPipeline()
+                    except Exception as e:
+                        logger.error(f"Pipeline initialization failed: {e}")
+                        print("Failed to initialize AI assistant components.")
+                        sys.exit(1)
+            
+                    print("\nHellobooks AI Assistant")
+                    print("Type your accounting question or type 'exit' to quit.\n")
+            
+                    while True:
+                        try:
+            
+                            user_question = input("Question: ").strip()
+            
+                            # empty input guard
+                            if not user_question:
+                                print("Please enter a valid question.\n")
+                                continue
+            
+                            # exit commands
+                            if user_question.lower() in ["exit", "quit"]:
+                                print("Exiting assistant. Goodbye.")
+                                break
+            
+                            answer = rag.ask(user_question)
+            
+                            print("\nAnswer:")
+                            print(answer)
+                            print("\n" + "-" * 50 + "\n")
+            
+                        except KeyboardInterrupt:
+                            print("\nSession interrupted. Exiting safely.")
+                            break
+            
+                        except EOFError:
+                            print("\nInput stream closed. Exiting.")
+                            break
+            
+                        except Exception as e:
+                            logger.error(f"Error processing question: {e}")
+                            print("An error occurred while processing your request.\n")
+            
+                except Exception as e:
+                    logger.error(f"Application startup failed: {e}")
+                    print("Failed to start the AI assistant.")
+                    sys.exit(1)
+            
+            
+            # --------------------------------------------------
+            # Program Entry Point
+            # --------------------------------------------------
+            
+            if __name__ == "__main__":
+                run_cli()
+            --- END CONTENT ---
+        📄 rag_pipeline.py
+            --- BEGIN CONTENT ---
+            import logging
+            from typing import List
+            
+            from .embedder import Embedder
+            from .retriever import Retriever
+            from .llm import LLMClient
+            
+            
+            # --------------------------------------------------
+            # Logging Configuration
+            # --------------------------------------------------
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            # --------------------------------------------------
+            # RAG Pipeline
+            # --------------------------------------------------
+            
+            class RAGPipeline:
+                """
+                Orchestrates the Retrieval-Augmented Generation workflow.
+                """
+            
+                def __init__(self):
+                    try:
+                        logger.info("Initializing RAG pipeline components...")
+            
+                        self.embedder = Embedder()
+                        self.retriever = Retriever()
+                        self.llm = LLMClient()
+            
+                        logger.info("RAG pipeline initialized successfully.")
+            
+                    except Exception as e:
+                        logger.error(f"Failed to initialize RAG pipeline: {e}")
+                        raise RuntimeError(f"Pipeline initialization error: {e}")
+            
+                # --------------------------------------------------
+            
+                def ask(self, question: str) -> str:
+                    """
+                    Processes a user question through the RAG pipeline.
+                    """
+            
+                    # ------------------------------
+                    # Input validation
+                    # ------------------------------
+            
+                    if not isinstance(question, str) or not question.strip():
+                        raise ValueError("Question must be a non-empty string.")
+            
+                    try:
+            
+                        # ------------------------------
+                        # Step 1: Embed question
+                        # ------------------------------
+            
+                        logger.info("Embedding user question...")
+                        query_embedding = self.embedder.embed_text(question)
+            
+                        if not query_embedding or not isinstance(query_embedding, list):
+                            raise RuntimeError("Embedding generation returned invalid result.")
+            
+                        # ------------------------------
+                        # Step 2: Retrieve documents
+                        # ------------------------------
+            
+                        logger.info("Retrieving relevant documents...")
+                        retrieved_docs = self.retriever.search(query_embedding)
+            
+                        if not retrieved_docs:
+                            logger.warning("No documents retrieved for query.")
+                            return "I could not find relevant information in the knowledge base."
+            
+                        if not isinstance(retrieved_docs, list):
+                            raise RuntimeError("Retriever returned invalid document format.")
+            
+                        # ------------------------------
+                        # Step 3: Generate answer
+                        # ------------------------------
+            
+                        logger.info("Generating response from LLM...")
+                        answer = self.llm.generate_answer(question, retrieved_docs)
+            
+                        if not answer or not isinstance(answer, str):
+                            raise RuntimeError("LLM returned an invalid response.")
+            
+                        return answer.strip()
+            
+                    except Exception as e:
+                        logger.error(f"Error in RAG pipeline: {e}")
+                        raise RuntimeError(f"Failed to process question: {e}")
+            --- END CONTENT ---
+        📄 retriever.py
+            --- BEGIN CONTENT ---
+            import pickle
+            import logging
+            import numpy as np
+            import faiss
+            from typing import List
+            
+            from .config import VECTOR_STORE_PATH, TOP_K_RESULTS
+            
+            
+            # --------------------------------------------------
+            # Logging
+            # --------------------------------------------------
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            # --------------------------------------------------
+            # Retriever Class
+            # --------------------------------------------------
+            
+            class Retriever:
+                """
+                Handles similarity search using FAISS.
+                """
+            
+                def __init__(self):
+                    try:
+                        self.index_path = VECTOR_STORE_PATH / "faiss_index.bin"
+                        self.metadata_path = VECTOR_STORE_PATH / "documents.pkl"
+            
+                        # Validate index file
+                        if not self.index_path.exists():
+                            raise FileNotFoundError(
+                                f"FAISS index not found at {self.index_path}. "
+                                "Run the indexing script first."
+                            )
+            
+                        # Validate metadata file
+                        if not self.metadata_path.exists():
+                            raise FileNotFoundError(
+                                f"Document metadata not found at {self.metadata_path}. "
+                                "Run the indexing script first."
+                            )
+            
+                        logger.info("Loading FAISS index...")
+                        self.index = faiss.read_index(str(self.index_path))
+            
+                        logger.info("Loading document metadata...")
+                        with open(self.metadata_path, "rb") as f:
+                            self.documents = pickle.load(f)
+            
+                        if not isinstance(self.documents, list):
+                            raise RuntimeError("Invalid metadata format: documents must be a list.")
+            
+                        logger.info("Retriever initialized successfully.")
+            
+                    except Exception as e:
+                        logger.error(f"Failed to initialize retriever: {e}")
+                        raise RuntimeError(f"Retriever initialization failed: {e}")
+            
+                # --------------------------------------------------
+            
+                def search(self, query_embedding: List[float]) -> List[str]:
+                    """
+                    Perform similarity search using FAISS.
+                    """
+            
+                    if not query_embedding or not isinstance(query_embedding, list):
+                        raise ValueError("Query embedding must be a non-empty list.")
+            
+                    try:
+            
+                        # Convert query to FAISS compatible format
+                        query_vector = np.array([query_embedding], dtype="float32")
+            
+                        if query_vector.ndim != 2:
+                            raise ValueError("Invalid query embedding shape.")
+            
+                        distances, indices = self.index.search(query_vector, TOP_K_RESULTS)
+            
+                        results = []
+            
+                        for idx in indices[0]:
+            
+                            # Skip invalid FAISS indices
+                            if idx < 0:
+                                continue
+            
+                            if idx < len(self.documents):
+                                results.append(self.documents[idx])
+            
+                        return results
+            
+                    except Exception as e:
+                        logger.error(f"Error during vector search: {e}")
+                        raise RuntimeError(f"Vector search failed: {e}")
+            --- END CONTENT ---
+    📁 knowledge_base/
+        📄 balance_sheet.md
+            --- BEGIN CONTENT ---
+            A balance sheet is a financial statement that shows a company's assets,
+            liabilities, and equity at a specific point in time.
+            
+            Assets represent what the company owns, liabilities represent what the
+            company owes, and equity represents the owner's share in the company.
+            
+            The balance sheet follows the accounting equation:
+            
+            Assets = Liabilities + Equity
+            --- END CONTENT ---
+        📄 bookkeeping.md
+            --- BEGIN CONTENT ---
+            Bookkeeping is the process of recording financial transactions of a business.
+            
+            It involves tracking income, expenses, assets, and liabilities. Bookkeeping ensures
+            that financial records are accurate and organized.
+            
+            Common bookkeeping tasks include recording sales, purchases, receipts, and payments.
+            
+            Accurate bookkeeping helps businesses monitor financial health and prepare financial
+            statements such as profit and loss statements, balance sheets, and cash flow reports.
+            --- END CONTENT ---
+        📄 cash_flow.md
+            --- BEGIN CONTENT ---
+            A cash flow statement tracks the movement of money into and out of a business.
+            
+            It helps businesses understand how cash is generated and used during a period.
+            
+            Cash flow is usually divided into three categories:
+            operating activities, investing activities, and financing activities.
+            --- END CONTENT ---
+        📄 invoices.md
+            --- BEGIN CONTENT ---
+            An invoice is a document issued by a seller to a buyer requesting payment for goods
+            or services provided.
+            
+            Invoices usually include important information such as the invoice number, date,
+            description of items, quantity, price, and total amount due.
+            
+            Invoices help businesses track sales and manage accounts receivable.
+            --- END CONTENT ---
+        📄 profit_loss.md
+            --- BEGIN CONTENT ---
+            A profit and loss statement (P&L statement) summarizes the revenues, costs,
+            and expenses incurred during a specific period.
+            
+            It shows whether a business made a profit or a loss.
+            
+            The P&L statement typically includes revenue, cost of goods sold,
+            operating expenses, and net profit or loss.
+            --- END CONTENT ---
+    📁 Script/
+        📄 backup.py
+            --- BEGIN CONTENT ---
+            import os
+            import time
+            import glob
+            import json
+            import hashlib
+            import argparse
+            from collections import defaultdict
+            from typing import Dict, Set, List
+            
+            # === Settings ===
+            PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
+            os.makedirs(LOG_DIR, exist_ok=True)
+            
+            STRUCTURE_FILE = os.path.join(LOG_DIR, "project_structure.txt")
+            HASH_FILE = os.path.join(LOG_DIR, "project_hashes.json")
+            MEMORY_FILE = os.path.join(LOG_DIR, "structure_memory.json")
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            TIMESTAMPED_FILE = os.path.join(LOG_DIR, f"project_structure_{timestamp}.txt")
+            
+            # === Exclusions & Force Includes ===
+            EXCLUDED_DIRS: Set[str] = {
+                ".git", ".vscode",
+                "__pycache__", ".pytest_cache", "logs", "node_modules", ".venv", "Scripts", ".anm", ".idea", "migrations"
+            }
+            
+            IGNORED_SUFFIXES: Set[str] = {
+                ".db", ".wav"
+            }
+            
+            FORCE_INCLUDE_FILES: Set[str] = {"main.py", "config.py"}
+            FORCE_INCLUDE_DIRS: Set[str] = {"modules"}
+            
+            INCLUDE_CONTENT_SUFFIXES: Set[str] = {
+                ".py", ".html", ".css", ".js", ".jsx", ".config.js", ".ts", ".tsx", ".txt", ".md"
+            }
+            
+            # === Tracking ===
+            included_files = 0
+            included_lines = 0
+            skipped_files = 0
+            file_hashes: Dict[str, str] = {}
+            
+            # === Utilities ===
+            def normalize_path(path: str) -> str:
+                return (
+                    os.path.normpath(path)
+                    if os.path.isabs(path)
+                    else os.path.normpath(os.path.join(PROJECT_ROOT, path))
+                )
+            
+            def should_exclude(path: str) -> bool:
+                parts = os.path.normpath(path).split(os.sep)
+            
+                # Do not exclude if it's a .py file
+                if os.path.splitext(path)[1].lower() == ".py":
+                    return False
+                return any(part in EXCLUDED_DIRS for part in parts)
+            
+            def hash_file(path: str) -> str:
+                try:
+                    with open(path, "rb") as f:
+                        return hashlib.sha256(f.read()).hexdigest()
+                except Exception:
+                    return "ERROR"
+            
+            def is_force_included(path: str) -> bool:
+                rel = os.path.relpath(path, PROJECT_ROOT)
+                filename = os.path.basename(path)
+                parts = rel.split(os.sep)
+                return filename in FORCE_INCLUDE_FILES or any(p in FORCE_INCLUDE_DIRS for p in parts)
+            
+            # === Core logic ===
+            def dump_structure_from_list(file_list: List[str], verbose: bool = False) -> str:
+                global included_files, included_lines, skipped_files, file_hashes
+                included_files = included_lines = skipped_files = 0
+                file_hashes.clear()
+            
+                result = ""
+                normalized_paths = sorted(
+                    set(filter(os.path.isfile, (normalize_path(fp) for fp in file_list)))
+                )
+            
+                print("\n📂 Building structure... Logging file decisions:")
+                dir_files = defaultdict(list)
+                for path in normalized_paths:
+                    dir_files[os.path.dirname(path)].append(path)
+            
+                for directory in sorted(dir_files.keys(), key=lambda d: d.lower()):
+                    rel_dir = os.path.relpath(directory, PROJECT_ROOT)
+                    indent_level = 0 if rel_dir == "." else len(rel_dir.split(os.sep))
+                    indent = "    " * indent_level
+            
+                    if should_exclude(rel_dir):
+                        result += f"{indent}📁 {os.path.basename(directory)}/  ← skipped (excluded folder)\n"
+                        print(f"[-] Skipped folder: {rel_dir}/  ← excluded folder")
+                        continue
+            
+                    result += (
+                        f"{indent}📁 {os.path.basename(directory)}/\n"
+                        if rel_dir != "."
+                        else f"📁 {os.path.basename(directory)} (root)\n"
+                    )
+            
+                    for file_path in sorted(dir_files[directory], key=lambda f: os.path.basename(f).lower()):
+                        file_name = os.path.basename(file_path)
+                        suffix = os.path.splitext(file_name)[1].lower()
+                        rel_path = os.path.relpath(file_path, PROJECT_ROOT)
+            
+                        # Skip unless force included
+                        if suffix in IGNORED_SUFFIXES and not is_force_included(file_path):
+                            skipped_files += 1
+                            print(f"[-] Skipped: {rel_path}  ← ignored suffix {suffix}")
+                            continue
+            
+                        sub_indent = indent + "    "
+                        result += f"{sub_indent}📄 {file_name}\n"
+            
+                        file_hashes[rel_path] = hash_file(file_path)
+            
+                        # Content inclusion
+                        if suffix in INCLUDE_CONTENT_SUFFIXES or is_force_included(file_path):
+                            try:
+                                with open(file_path, "rb") as f:
+                                    raw = f.read()
+                                try:
+                                    content = raw.decode("utf-8")
+                                except UnicodeDecodeError:
+                                    try:
+                                        content = raw.decode("latin-1")
+                                    except Exception:
+                                        content = raw.decode("utf-8", errors="replace")
+                                        
+                                if "\x00" in content:
+                                    raise ValueError("Binary detected")
+            
+                                included_files += 1
+                                lines = content.splitlines()
+                                included_lines += len(lines)
+            
+                                if verbose:
+                                    print(f"[+] Included: {rel_path} ✔ content dumped")
+            
+                                result += f"{sub_indent}    --- BEGIN CONTENT ---\n"
+                                for line in lines:
+                                    result += f"{sub_indent}    {line}\n"
+                                result += f"{sub_indent}    --- END CONTENT ---\n"
+            
+                            except Exception as e:
+                                skipped_files += 1
+                                print(f"[~] Skipped content: {rel_path} ← error {e}")
+                                result += f"{sub_indent}    ⚠️ Skipped: {e}\n"
+                        else:
+                            skipped_files += 1
+                            print(f"[~] Skipped content only: {rel_path} ← non-text file")
+            
+                return result
+            
+            # === Memory Comparison ===
+            def compare_with_last_memory() -> Dict[str, List[str]]:
+                if not os.path.exists(MEMORY_FILE):
+                    return {"Added": [], "Removed": [], "Changed": []}
+            
+                with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+                    last = json.load(f).get("hashes", {})
+            
+                added = [f for f in file_hashes if f not in last]
+                removed = [f for f in last if f not in file_hashes]
+                changed = [f for f in file_hashes if f in last and file_hashes[f] != last[f]]
+            
+                return {"Added": added, "Removed": removed, "Changed": changed}
+            
+            # === Output Handling ===
+            def save_json_hashes() -> None:
+                with open(HASH_FILE, "w", encoding="utf-8") as f:
+                    json.dump(file_hashes, f, indent=2)
+            
+            def cleanup_old_snapshots(max_files: int = 5) -> None:
+                all_snapshots = sorted(
+                    glob.glob(os.path.join(LOG_DIR, "project_structure_*.txt")), reverse=True
+                )
+                for old_file in all_snapshots[max_files:]:
+                    try:
+                        os.remove(old_file)
+                    except Exception as e:
+                        print(f"⚠️ Couldn't remove {old_file}: {e}")
+            
+            
+            def write_full_structure(args: argparse.Namespace) -> None:
+                print(f"📦 Scanning: {PROJECT_ROOT}")
+                files_to_dump = []
+            
+                # --- Scan directories with FORCE_INCLUDE override ---
+                for dirpath, _, filenames in os.walk(PROJECT_ROOT):
+                    rel_dir = os.path.relpath(dirpath, PROJECT_ROOT)
+                    parts = rel_dir.split(os.sep)
+            
+                    # Skip only if exluded AND not forced
+                    if should_exclude(dirpath) and not any(p in FORCE_INCLUDE_DIRS for p in parts):
+                        continue
+            
+                    for filename in filenames:
+                        file_path = os.path.join(dirpath, filename)
+                        files_to_dump.append(file_path)
+            
+                # --- Remove duplicates + sort for stable output --- 
+                files_to_dump = sorted(set(files_to_dump))
+            
+                # --- Build structure from actual included file List ---
+                structure = dump_structure_from_list(files_to_dump, verbose=args.verbose)
+            
+                # --- Header wih timestamp ----
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                header = f"📦 Project Snapshot: {time.ctime()}\nRoot: {PROJECT_ROOT}\n\n"
+            
+                # --- Write latest + timestamped snapshot ---
+                with open(STRUCTURE_FILE, "w", encoding="utf-8") as f:
+                    f.write(header + structure)
+                with open(TIMESTAMPED_FILE.replace("{timestamp}", timestamp), "w", encoding="utf-8") as f:
+                    f.write(header + structure)
+                
+                # --- Save JSON hashes for change detection ---
+                save_json_hashes()
+            
+                # --- Memory handling ---
+                if args.memory:
+                    diffs = compare_with_last_memory()
+                    with open(MEMORY_FILE, "w", encoding="utf-8") as mem:
+                        json.dump({"hashes": file_hashes, "timestamp": timestamp}, mem, indent=2)
+                    
+                    print("🧠 Memory updated. Changes since last run:")
+                    for k, v in diffs.items():
+                        if v:
+                            print(f" {k}: {len(v)} files")
+                            for f in v[:10]:
+                                print(f" - {f}")
+                
+                # --- Summary ---
+                if args.summary:
+                    print(f"\n📊 Total scanned: {len(files_to_dump)}")
+                    print(f"📄 Included: {included_files}")
+                    print(f"📑 Lines dumped: {included_lines}")
+                    print(f"🧹 Skipped: {skipped_files}")
+            
+                # --- Cleanup old snapshots ---
+                cleanup_old_snapshots()
+            
+            
+            # === CLI ===
+            def parse_args() -> argparse.Namespace:
+                parser = argparse.ArgumentParser(description="📦 Project Snapshot Dumper")
+                parser.add_argument("--verbose", action="store_true", help="Show detailed logs")
+                parser.add_argument("--summary", action="store_true", help="Show summary")
+                parser.add_argument("--memory", action="store_true", help="Track changes with memory")
+                args = parser.parse_args()
+                if not any(vars(args).values()):
+                    args.verbose = args.summary = args.memory = True
+                return args
+            
+            if __name__ == "__main__":
+                args = parse_args()
+                write_full_structure(args)
+            --- END CONTENT ---
+        📄 bootstrap_1.py
+            --- BEGIN CONTENT ---
+            """
+            .venv\Scripts\python.exe bootstrap_1.py
+            
+            PREVIEW:
+                    .venv\Scripts\python.exe bootstrap_1.py --dry-run
+                    
+                    .venv setup python -m venv .venv
+                    .venv\Scripts\activate
+                    .venv\Scripts\python.exe -m pip install --upgrade pip
+                    .venv\Scripts\python.exe -m pip install <missing packages>
+            
+            """
+            
+            """NEXT MODIFICATIONS TO BE PENDING
+            also i wanna use something dynamic as something dynamic as on some places various versions of python are used so i want this script to provide an prompt at begining asking for which versions of python i wanna use and it should create different env for each version and also i want next update as an floating button or menu which i can use to activate deactivate the environment and any version i want to activate or deactivate as i please like a switch board i wanna turn on light or turn off fan or vise versa i can activate any environment or deeactivate it just by that floating window as i please in the project folder so that i don need to use comands to switch the environment and other stuff 
+            
+            SECOND
+            i want an second window which holds the whole project structure of my roject i wanna test or run any script I just need to click there and the script will run in terminal i dont have to face the issue like file not found folder not found moduls not found any kind of these errors if this kind of response comes the script should auto recalculate and reshedule everything an make the script running as per situtaion or condition
+            
+            """
+            
+            import os
+            import sys
+            import ast
+            import subprocess
+            import importlib.util
+            import json
+            
+            print("▶ Starting bootstrap environment setup")
+            
+            PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+            
+            print("\n[PYTHON VERSION SELECTION]")
+            
+            available_pythons = []
+            
+            # Scan common Windows install Locations
+            possible_locations = [
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Python"),
+                r"C:\Python"
+            ]
+            
+            for base in possible_locations:
+                if os.path.exists(base):
+                    for folder in os.listdir(base):
+                        python_path = os.path.join(base, folder, "python.exe")
+                        if os.path.exists(python_path):
+                            available_pythons.append(python_path)
+            
+            if not available_pythons:
+                print("⚠ No additional Python installations found. Using current interpreter.")
+                SELECTED_PYTHON = sys.executable
+            else:
+                print("Available Python Versions:")
+                for i, path in enumerate(available_pythons, start=1):
+                    print(f"{i}. {path}")
+                print(f"{len(available_pythons)+1}. Use current interpreter ({sys.executable})")
+                
+                choice = input("Select Python version number: ").strip()
+                
+                try:
+                    choice = int(choice)
+                    if 1 <= choice <= len(available_pythons):
+                        SELECTED_PYTHON = available_pythons[choice-1]
+                    else:
+                        SELECTED_PYTHON = sys.executable
+                except:
+                    SELECTED_PYTHON = sys.executable
+                
+            print(f"▶ Selected Python: {SELECTED_PYTHON}")
+            
+            # -------------------- STEP 0: FIND EXISTING VENV --------------------
+            print("\n[STEP 0] Searching for existing virtual environments")
+            
+            MODULE_TO_PIP = {
+                "cv2": "opencv-python",
+                "PIL": "Pillow",
+                "sklearn": "scikit-learn",
+                "bs4": "beautifulsoup4",
+                "yaml": "PyYAML",
+            }
+            
+            DRY_RUN = "--dry-run" in sys.argv
+            
+            version_output = subprocess.check_output(
+                [SELECTED_PYTHON, "--version"],
+                stderr=subprocess.STDOUT,
+                text=True
+            ).strip()
+            
+            version_number = version_output.split()[1]
+            major_minor = ".".join(version_number.split(".")[:2])
+            version_tag = major_minor.replace(".", "")
+            CANDIDATE_ENVS = [f".venv_{version_tag}"]
+            VENV_PATH = None
+            
+            for name in CANDIDATE_ENVS:
+                candidate = os.path.join(PROJECT_ROOT, name)
+                
+                if os.name == "nt":
+                    python_path = os.path.join(candidate, "Scripts", "python.exe")
+                else:
+                    python_path = os.path.join(candidate, "bin", "python")
+                    
+                if os.path.exists(python_path):
+                    VENV_PATH = candidate
+                    print(f"✔ Found existing virtual environment: {candidate}")
+                    break
+            
+            # If none found, default to .venv
+            if VENV_PATH is None:
+                VENV_PATH = os.path.join(PROJECT_ROOT, f".venv_{version_tag}")
+                print("❌ No existing virtual environment found")
+            
+            print(f"▶ Virtualenv path selected: {VENV_PATH}")
+            
+            # -------------------- STEP 1: CREATE VENV (ONLY IF MISSING) --------------------
+            print("\n[STEP 1] Checking virtual environment")
+            
+            if not os.path.exists(VENV_PATH):
+                print("⬇ Creating new virtual environment")
+                subprocess.check_call([SELECTED_PYTHON, "-m", "venv", VENV_PATH])
+                print("✔ Virtual environment created")
+            
+                print("⬆ Upgrading pip")
+                
+                if os.name == "nt":
+                    venv_python = os.path.join(VENV_PATH, "Scripts", "python.exe")
+                else:
+                    venv_python = os.path.join(VENV_PATH, "bin", "python")
+                    
+                subprocess.check_call([
+                   venv_python,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    "pip"
+                ])
+            else:
+                print("✔ Using existing virtual environment")
+            
+            # Select python inside venv
+            if os.name == "nt":
+                VENV_PYTHON = os.path.join(VENV_PATH, "Scripts", "python.exe")
+            else:
+                VENV_PYTHON = os.path.join(VENV_PATH, "bin", "python")
+            
+            print(f"▶ Using venv python: {VENV_PYTHON}")
+            
+            
+            # -------------------- ENVIRONMENT REGISTRY --------------------
+            registry_file = os.path.join(PROJECT_ROOT, "env_registry.json")
+            
+            if os.path.exists(registry_file):
+                with open(registry_file, "r") as f:
+                    registry = json.load(f)
+            else:
+                registry = {}
+                
+            # Deactivate all previous environments
+            for key in registry:
+                registry[key]["active"] = False
+                
+            # Activate current one
+            registry[version_tag] = {
+                "python": SELECTED_PYTHON,
+                "venv_path": VENV_PATH,
+                "active": True
+            }
+            
+            with open(registry_file, "w") as f:
+                json.dump(registry, f, indent=2)
+            
+            print("✔ Environment registry updated")        
+            
+            
+            # -------------------- STEP 2: SCAN IMPORTS --------------------
+            print("\n[STEP 2] Scanning project files for imports")
+            
+            STANDARD_LIBS = set(sys.builtin_module_names)
+            found_imports = set()
+            
+            def is_std_lib(module):
+                if module in ("__main__",):
+                    return True
+                if module in STANDARD_LIBS:
+                    return True
+                try:
+                    spec = importlib.util.find_spec(module)
+                except (ModuleNotFoundError, ValueError):
+                    return False
+                if spec is None or spec.origin is None:
+                    return True
+                return "site-packages" not in spec.origin
+            
+            def scan_file(file_path):
+                print(f"  ▶ Scanning: {file_path}")
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        tree = ast.parse(f.read())
+                except Exception as e:
+                    print(f"    ⚠ Skipped (parse error): {e}")
+                    return
+            
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for name in node.names:
+                            module = name.name.split(".")[0]
+                            if not is_std_lib(module):
+                                found_imports.add(module)
+                    elif isinstance(node, ast.ImportFrom):
+                        if node.module:
+                            module = node.module.split(".")[0]
+                            if not is_std_lib(module):
+                                found_imports.add(module)
+            
+            IGNORE_DIRS = {
+                VENV_PATH,
+                os.path.join(PROJECT_ROOT, ".git"),
+                os.path.join(PROJECT_ROOT, "__pycache__"),
+                os.path.join(PROJECT_ROOT, ".idea"),
+                os.path.join(PROJECT_ROOT, ".vscode"),
+            }
+            
+            for root, _, files in os.walk(PROJECT_ROOT):
+                # if any (root.startswith(ignored) for ignored in IGNORE_DIRS):
+                if any(os.path.commonpath([root, ignored]) == ignored for ignored in IGNORE_DIRS):
+                    print(f"  ⚠ Skipping ignored directory: {root}")
+                    continue
+                for file in files:
+                    if file.endswith(".py") and file != os.path.basename(__file__):
+                        scan_file(os.path.join(root, file))
+            
+            third_party = sorted(found_imports)
+            
+            print("\n▶ Third-party modules required by project:")
+            for pkg in third_party:
+                print(f"  - {pkg}")
+            
+            with open("requirements_auto.txt", "w") as f:
+                for pkg in third_party:
+                    f.write(pkg + "\n")
+            
+            print("✔ requirements_auto.txt written")
+            
+            with open("requirements_clean.txt", "w") as f:
+                for pkg in third_party:
+                    f.write(MODULE_TO_PIP.get(pkg, pkg) + "\n")
+            
+            print("✔ requirements_clean.txt written")
+            
+            # -------------------- STEP 3: CHECK INSTALLED PACKAGES --------------------
+            print("\n[STEP 3] Checking installed packages in environment")
+            
+            def get_installed_packages():
+                # if package == "test":
+                #     return True
+                # try:
+                #     subprocess.check_call(
+                #         [VENV_PYTHON, "-c", f"import {package}"],
+                #         stdout=subprocess.DEVNULL,
+                #         stderr=subprocess.DEVNULL
+                #     )
+                #     return True
+                # except subprocess.CalledProcessError:
+                #     return False
+                output = subprocess.check_output(
+                    [VENV_PYTHON, "-m", "pip", "freeze"],
+                    text = True
+                )
+                return {line.split("==")[0].lower() for line in output.splitlines()}
+            
+            missing = []
+            installed_by_script = []
+            installed = get_installed_packages()
+            
+            for package in third_party:
+                pip_name = MODULE_TO_PIP.get(package, package)
+                if pip_name.lower() in installed:
+                    print(f"✔ {package} already installed")
+                else:
+                    print(f"❌ {package} missing")
+                    missing.append(pip_name)
+            
+            missing = sorted(set(missing))
+            # for package in third_party:
+            #     if is_installed(package):
+            #         print(f"✔ {package} already installed")
+            #     else:
+            #         print(f"❌ {package} missing")
+            #         missing.append(package)
+            
+            # -------------------- STEP 4: INSTALL MISSING --------------------
+            print("\n[STEP 4] Installing missing packages")
+            
+            for package in missing:
+                if DRY_RUN:
+                    print(f"[DRY-RUN] Would install {package}")
+                    # pip_name = MODULE_TO_PIP.get(package, package)
+                else:
+                    subprocess.check_call([VENV_PYTHON, "-m", "pip", "install", package])
+                    installed_by_script.append(package)
+                    print(f"✔ Installed {package}")
+            
+            # -------------------- STEP 5: FREEZE ENV --------------------
+            print("\n[STEP 5] Locking environment versions")
+            
+            with open("requirements_locked.txt", "w") as f:
+                subprocess.check_call(
+                    [VENV_PYTHON, "-m", "pip", "freeze"],
+                    stdout=f
+                )
+            
+            print("✔ requirements_locked.txt written")
+            print("\n✔ Environment setup completed successfully")
+            
+            installed = get_installed_packages()
+            
+            # -------------------- STEP 6: DEPENDENCY WRITING REPORTS --------------------
+            print("\n[STEP 6] Writing dependency reports")
+            
+            report = {
+                "found_imports": sorted(third_party),
+                "installed": sorted(installed),
+                "missing": sorted(missing),
+                "installed_by_script": installed_by_script
+            }
+            
+            with open("dependency_report.json", "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2)
+            
+            with open("dependency_report.txt", "w", encoding="utf-8") as f:
+                # for key, values in report.items():
+                f.write("Dependency Report\n")
+                f.write("===================\n\n")
+                
+                f.write("Found imports:\n")
+                for m in sorted(third_party):
+                    f.write(f"  - {m}\n")
+                    
+                f.write("\nMissing packages:\n")
+                for m in missing:
+                    f.write(f" - {m}\n")
+                
+                f.write("\nInstalled by script:\n")
+                for m in installed_by_script:
+                    f.write(f" - {m}\n")
+                    
+            
+            print("✔ dependency_report.json written")
+            print("✔ dependency_report.txt written")
+                    # f.write(f"{key}:\n")
+                    # for value in values:
+                    #     f.write(f"  - {value}\n")
+                    # f.write("\n")
+            
+            
+            # -------------------- STEP 7: GENERATING PYPROJECT.TOML --------------------
+            print("\n[STEP 7] Generating pyproject.toml")
+            
+            with open("pyproject.toml", "w", encoding="utf-8") as f:
+                f.write("[project]\n")
+                f.write('name = "project_100_angela"\n')
+                f.write('version = "1.0.0"\n')
+                f.write('description = "Auto-generated dependency file"\n')
+                f.write('requires-python = ">=3.10"\n')
+                f.write("dependencies = [\n")
+                
+                for pkg in sorted(set(MODULE_TO_PIP.get(p,p) for p in third_party)):
+                    f.write(f'  "{pkg}", \n')
+                    
+                f.write("]\n")
+            
+            print("✔ pyproject.toml written")
+            
+                
+            --- END CONTENT ---
+        📄 DATA_RYZE.txt
+            --- BEGIN CONTENT ---
+            COMMON_FOR_VARIOUS_PROJECTS
+            
+            AI WORKING COMAND - 
+                Role: You are acting as a Senior Lead Full-Stack Engineer. Your goal is to provide high-density, technical solutions with zero conversational filler.
+                Operational Directives:
+                    Internalize: Read the project structure and map dependencies immediately. Do not summarize unless asked.
+                    No Conversational Filler: Skip phrases like "I understand" or "Here is the code."
+                    Logic First: If a requested change conflicts with the existing architecture, flag the conflict immediately.
+                    Code-Centric: Provide full, copy-pasteable blocks for modified files.
+                    Workflow: I will provide the project structure now. Respond ONLY with: Project Map Internalized. Standing by for instructions.
+            
+                THEN WITH .TXT FILE - 
+                    Here is the project structure and codebase. Internalize this map. Do not summarize. Await my first task.
+                
+                
+                before uploading on git use - 
+                    pip freeze > requirements.txt
+            
+            
+                install git system
+                    winget install --id Git.Git -e --source winget
+                    git --version
+            
+                    RUN - GIT USING-
+                        git init
+                        git add .
+                        git commit -m "Initial commit"
+            
+                    For making changes using gitignore to remove the files from made repo
+                        git rm -r --cached 
+                        git add .
+                        git commit -m "Fix gitignore"
+            
+                    check .gitignore file being used
+                        git check-ignore -v backend/.env
+                    
+                    to check if anything is uploadd
+                        git status
+            
+                    
+                    to finally set:
+                        git init
+                        change global git config using comand and the path of project location:
+                            git config --global --add safe.directory "E:/projects_praactice/projects_100_Angela/JobBoard_Projet"
+            
+                            git remote add origin https://github.com/anmolkamboj99915/Job_Board
+                            git remote add origin https://github.com/anmolkamboj99915/Job_Board
+                        git add
+                        git commit -m "Initial full-stack setup for AI_UI_GENERATOR"
+                        git branch -M main
+                        git pull origin main --allow-unrelated-histories
+                        git add .
+                        git commit -m "Resolved merge conflict"
+                        git push -u origin main
+                        git add .
+                        git commit -m "your message"
+                        git push
+            
+                     🚀 FULL CLEAN TEMPLATE (COPY FOR FUTURE)
+                        cd project_folder
+                        Remove-Item -Recurse -Force .git
+                        git init
+                        git config --global user.name "anmolkamboj99915"
+                        git config --global user.email "anmolkamboj99915@gmail.com"
+                        git add .
+                        git config --global --add safe.directory E:/projects_praactice/projects_100_Angela/JobBoard_Project
+                        git commit -m "Initial commit"
+                        git remote add origin https://github.com/username/repo.git
+                        git branch -M main
+                        git push -u origin main --force
+            
+                    python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+            
+            
+                    root level full synch 
+                        git add -A
+                        git commit -m "Full project sync"
+                        git push origin main
+            
+            
+                    
+            
+                    to fix any issues in render loading 
+                        git log --oneline
+            
+            
+            
+            FOR RYZZ_AI_UI_PROJECT    
+                way to install java and making it peranent 
+                    winget install Microsoft.OpenJDK.17
+                    setx JAVA_HOME "C:\Program Files\Microsoft\jdk-17"
+            
+                    version verify
+                        java -version
+                        javac -version
+            
+            
+                to be added in environment variables if not present there - C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot\bin
+            
+            
+                to reliabley check java present or not use - Get-Command java
+            
+            
+                ways to setup and install node.js
+                    winget install OpenJS.NodeJS.LTS
+            
+                    framework choosen -- React
+                    variant choosen   -- JavaScript + SWC(Speedy Web Compiler)
+                    Vite 8 beta is experimental - May have breaking changes choose No
+            
+                    npm install
+                    npm run dev
+                    node -v for version info
+                    
+            
+                    if port already in use - npm run dev -- --port 5174
+            
+            
+                install tailwind css - npm install -
+                    D tailwindcss postcss autoprefixer npx tailwindcss init -p
+            
+                    get ist - npm list tailwindcss
+                            npm install -D @tailwindcss/postcss
+            
+            
+            
+                AT PHASE_2 COMPLETION NEW CHAAT BEGIN - 
+                    This is my project after completing Phase 2 of 01_AI Agent Architecture Guide.
+                    It includes planner, queue, processor, cancellation, logging, and failure handling.
+                    Now begin Phase 3 — Real AI Integration Layer without breaking existing architecture.
+            
+            
+                backend_setup -- 
+                    cd backend
+                    npm init -y
+                    npm install express cors openai dotenv
+            
+                    npm install dotenv
+            
+            
+                
+            
+                fallback system development 
+                    npm install axios
+            
+                    install minstral -- 
+                        npm install @mistralai/mistralai
+            
+            
+            FOR_BOOK_MY_SEAT
+            
+            installation modules - 
+                pip install django
+                pip install dj-database-url
+                pip install psycopg2-binary
+                pip install pillow
+                pip install stripe
+                pip install python-dotenv
+                pip install gunicorn
+                pip install dj-database-url psycopg2-binary
+                pip install psycopg2-binary dj-database-url whitenoise gunicorn
+                npm install -g vercel
+                vercel login
+            
+            
+                pip freeze > requirements.txt
+            
+            
+            
+            VERCEL SETUP:
+                npm install -g vercel
+                vercel login
+                vercel link
+                vercel env pull .env.production --environment=production
+                $env:DATABASE_URL = (Get-Content .env.production | Select-String DATABASE_URL).ToString().Split("=")[1]
+                python manage.py migrate
+            
+                BUILD COMAND ON VERCEL TO PLACE - python manage.py collectstatic --noinput
+            
+            
+            
+            
+            
+            
+            
+            running ways - 
+                python manage.py collectstatic
+                python manage.py migrate
+                python manage.py makemigrations
+            
+                python manage.py runserver
+            
+            root level full synch 
+                TO CHECK ISSUES
+                    python manage.py check
+            
+            
+            
+                        python manage.py collectstatic
+                        python manage.py migrate
+                        python manage.py makemigrations
+                        git add -A
+                        git commit -m "Full project sync"
+                        git push origin main
+            
+                    IF MAIN ISSUE ARISE - 
+                        git pull origin main --rebase
+            
+            
+            Comand to create django secret key 
+                python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+            
+            
+            to create admin - python manage.py createsuperuser
+                username admin - Anmoljaiya
+                username admin 2 - Anmolkamboj
+                password - Anmol@2556   
+                Username: admin
+                Password: admin123
+            
+            
+            
+            MONGODB - 
+                CONNECTION STRING - 
+                    mongodb+srv://anmolkamboj99915_db_user:4ujiCbCBHvM1V0kk@cluster0.uuc6viz.mongodb.net/
+            --- END CONTENT ---
+        📄 WORK_FLOW_DJANGO.docx
+    📁 scripts/
+        📄 build_index.py
+            --- BEGIN CONTENT ---
+            import sys
+            import pickle
+            import logging
+            import numpy as np
+            import faiss
+            from pathlib import Path
+            
+            # --------------------------------------------------
+            # Add project root to Python path
+            # --------------------------------------------------
+            
+            CURRENT_DIR = Path(__file__).resolve()
+            PROJECT_ROOT = CURRENT_DIR.parent.parent
+            sys.path.append(str(PROJECT_ROOT))
+            
+            # --------------------------------------------------
+            # Imports from app
+            # --------------------------------------------------
+            
+            from app.embedder import Embedder
+            from app.config import KNOWLEDGE_BASE_PATH, VECTOR_STORE_PATH
+            
+            
+            # --------------------------------------------------
+            # Logging
+            # --------------------------------------------------
+            
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            
+            
+            # --------------------------------------------------
+            # Load Knowledge Documents
+            # --------------------------------------------------
+            
+            def load_documents():
+                """
+                Loads all markdown documents from the knowledge base directory.
+                """
+            
+                documents = []
+            
+                try:
+                    if not KNOWLEDGE_BASE_PATH.exists():
+                        raise FileNotFoundError(
+                            f"Knowledge base directory not found: {KNOWLEDGE_BASE_PATH}"
+                        )
+            
+                    for file in KNOWLEDGE_BASE_PATH.glob("*.md"):
+            
+                        try:
+                            with open(file, "r", encoding="utf-8") as f:
+            
+                                content = f.read().strip()
+            
+                                if content:
+                                    documents.append(content)
+                                else:
+                                    logger.warning(f"Empty file skipped: {file}")
+            
+                        except Exception as file_error:
+                            logger.warning(f"Failed to read file {file}: {file_error}")
+            
+                    if not documents:
+                        raise ValueError("No valid documents found in knowledge base.")
+            
+                    logger.info(f"{len(documents)} documents loaded successfully.")
+            
+                    return documents
+            
+                except Exception as e:
+                    logger.error(f"Document loading failed: {e}")
+                    raise
+            
+            
+            # --------------------------------------------------
+            # Build FAISS Index
+            # --------------------------------------------------
+            
+            def build_faiss_index(embeddings):
+            
+                try:
+            
+                    if not embeddings:
+                        raise ValueError("Embeddings list is empty.")
+            
+                    vectors = np.array(embeddings, dtype="float32")
+            
+                    if vectors.ndim != 2:
+                        raise ValueError("Embedding vectors must be a 2D array.")
+            
+                    embedding_dim = vectors.shape[1]
+            
+                    index = faiss.IndexFlatL2(embedding_dim)
+            
+                    index.add(vectors)
+            
+                    return index
+            
+                except Exception as e:
+                    logger.error("FAISS index creation failed.")
+                    raise RuntimeError(f"FAISS index error: {e}")
+            
+            
+            # --------------------------------------------------
+            # Save Vector Store
+            # --------------------------------------------------
+            
+            def save_vector_store(index, documents):
+            
+                try:
+            
+                    VECTOR_STORE_PATH.mkdir(parents=True, exist_ok=True)
+            
+                    index_file = VECTOR_STORE_PATH / "faiss_index.bin"
+                    metadata_file = VECTOR_STORE_PATH / "documents.pkl"
+            
+                    faiss.write_index(index, str(index_file))
+            
+                    with open(metadata_file, "wb") as f:
+                        pickle.dump(documents, f)
+            
+                    logger.info("Vector store saved successfully.")
+                    logger.info(f"Index file: {index_file}")
+                    logger.info(f"Metadata file: {metadata_file}")
+            
+                except Exception as e:
+                    logger.error("Failed to save vector store.")
+                    raise RuntimeError(f"Vector store saving failed: {e}")
+            
+            
+            # --------------------------------------------------
+            # Main Index Build Process
+            # --------------------------------------------------
+            
+            def main():
+            
+                try:
+            
+                    logger.info("Starting knowledge base indexing...")
+            
+                    documents = load_documents()
+            
+                    embedder = Embedder()
+            
+                    logger.info("Generating embeddings...")
+                    embeddings = embedder.embed_documents(documents)
+            
+                    if not embeddings:
+                        raise ValueError("Embedding generation returned empty result.")
+            
+                    if len(embeddings) != len(documents):
+                        raise RuntimeError(
+                            "Mismatch between number of documents and embeddings."
+                        )
+            
+                    logger.info("Creating FAISS index...")
+                    index = build_faiss_index(embeddings)
+            
+                    save_vector_store(index, documents)
+            
+                    logger.info("Indexing completed successfully.")
+            
+                except Exception as e:
+                    logger.error(f"Indexing process failed: {e}")
+                    sys.exit(1)
+            
+            
+            # --------------------------------------------------
+            # Entry Point
+            # --------------------------------------------------
+            
+            if __name__ == "__main__":
+                main()
+            --- END CONTENT ---
+    📁 vector_store/
+        📄 documents.pkl
+        📄 faiss_index.bin

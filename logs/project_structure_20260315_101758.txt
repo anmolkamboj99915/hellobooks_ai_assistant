@@ -1,0 +1,836 @@
+📦 Project Snapshot: Sun Mar 15 10:18:14 2026
+Root: D:\projects_praactice\projects_100_Angela\MeruTechnologyPrivateLimited_Assignment\New_assignment_python
+
+📁 New_assignment_python (root)
+    📄 Assignment -Python Dev.pdf
+    📄 requirements.txt
+        --- BEGIN CONTENT ---
+        --- END CONTENT ---
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 gh25337/  ← skipped (excluded folder)
+                                    📁 gh26920/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                        📁 modules/  ← skipped (excluded folder)
+                                            📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                                📁 modules/  ← skipped (excluded folder)
+                                                    📁 container/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                    📁 modules/  ← skipped (excluded folder)
+                                        📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                        📁 modules/  ← skipped (excluded folder)
+                            📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                                📁 modules/  ← skipped (excluded folder)
+                                    📁 __pycache__/  ← skipped (excluded folder)
+                            📁 modules/  ← skipped (excluded folder)
+                                📁 __pycache__/  ← skipped (excluded folder)
+    📁 hellobooks-ai-assistant/
+        📄 .env
+        📄 Dockerfile
+        📄 README.md
+            --- BEGIN CONTENT ---
+            --- END CONTENT ---
+        📄 requirements.txt
+            ⚠️ Skipped: Binary detected
+        📁 app/
+            📄 config.py
+                --- BEGIN CONTENT ---
+                import os
+                from pathlib import Path
+                from dotenv import load_dotenv
+                
+                # --------------------------------------------------
+                # Load environment variables from .env file
+                # --------------------------------------------------
+                
+                BASE_DIR = Path(__file__).resolve().parent.parent
+                ENV_FILE = BASE_DIR / ".env"
+                
+                if ENV_FILE.exists():
+                    load_dotenv(ENV_FILE)
+                else:
+                    raise FileNotFoundError(
+                        f".env file not found at expected location: {ENV_FILE}"
+                    )
+                
+                # --------------------------------------------------
+                # API Configuration
+                # --------------------------------------------------
+                
+                OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+                
+                if not OPENAI_API_KEY:
+                    raise EnvironmentError(
+                        "OPENAI_API_KEY not found in environment variables. "
+                        "Please add it to the .env file."
+                    )
+                
+                # --------------------------------------------------
+                # Project Paths
+                # --------------------------------------------------
+                
+                KNOWLEDGE_BASE_PATH = BASE_DIR / "knowledge_base"
+                VECTOR_STORE_PATH = BASE_DIR / "vector_store"
+                
+                # Ensure required directories exist
+                if not KNOWLEDGE_BASE_PATH.exists():
+                    raise FileNotFoundError(
+                        f"Knowledge base directory not found: {KNOWLEDGE_BASE_PATH}"
+                    )
+                
+                VECTOR_STORE_PATH.mkdir(parents=True, exist_ok=True)
+                
+                # --------------------------------------------------
+                # Model Configuration
+                # --------------------------------------------------
+                
+                # Embedding model used for vector generation
+                EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+                
+                # LLM model for answering questions
+                LLM_MODEL_NAME = "gpt-4o-mini"
+                
+                # Number of retrieved documents
+                TOP_K_RESULTS = 3
+                
+                # --------------------------------------------------
+                # Debug / Info Helper
+                # --------------------------------------------------
+                
+                def print_config_summary():
+                    """
+                    Prints configuration summary for debugging.
+                    """
+                    print("----- Configuration Loaded -----")
+                    print(f"Base Directory: {BASE_DIR}")
+                    print(f"Knowledge Base Path: {KNOWLEDGE_BASE_PATH}")
+                    print(f"Vector Store Path: {VECTOR_STORE_PATH}")
+                    print(f"Embedding Model: {EMBEDDING_MODEL_NAME}")
+                    print(f"LLM Model: {LLM_MODEL_NAME}")
+                    print(f"Top K Retrieval: {TOP_K_RESULTS}")
+                    print("--------------------------------")
+                --- END CONTENT ---
+            📄 embedder.py
+                --- BEGIN CONTENT ---
+                from sentence_transformers import SentenceTransformer
+                from typing import List
+                import logging
+                
+                from .config import EMBEDDING_MODEL_NAME
+                
+                
+                # --------------------------------------------------
+                # Logging Configuration
+                # --------------------------------------------------
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                # --------------------------------------------------
+                # Embedder Class
+                # --------------------------------------------------
+                
+                class Embedder:
+                    """
+                    Handles text embedding generation using SentenceTransformers.
+                    """
+                
+                    def __init__(self):
+                        try:
+                            logger.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
+                            self.model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+                        except Exception as e:
+                            logger.error("Failed to load embedding model.")
+                            raise RuntimeError(f"Embedding model initialization failed: {e}")
+                
+                    # --------------------------------------------------
+                
+                    def embed_text(self, text: str) -> List[float]:
+                        """
+                        Convert a single text string into an embedding vector.
+                        """
+                
+                        if not isinstance(text, str) or not text.strip():
+                            raise ValueError("Input text must be a non-empty string.")
+                
+                        try:
+                            embedding = self.model.encode(text)
+                            return embedding.tolist()
+                        except Exception as e:
+                            logger.error("Error generating embedding for text.")
+                            raise RuntimeError(f"Embedding generation failed: {e}")
+                
+                    # --------------------------------------------------
+                
+                    def embed_documents(self, documents: List[str]) -> List[List[float]]:
+                        """
+                        Generate embeddings for multiple documents.
+                        """
+                
+                        if not documents:
+                            raise ValueError("Document list cannot be empty.")
+                
+                        if not all(isinstance(doc, str) and doc.strip() for doc in documents):
+                            raise ValueError("All documents must be valid non-empty strings.")
+                
+                        try:
+                            embeddings = self.model.encode(documents)
+                            return embeddings.tolist()
+                        except Exception as e:
+                            logger.error("Error generating embeddings for document batch.")
+                            raise RuntimeError(f"Batch embedding failed: {e}")
+                --- END CONTENT ---
+            📄 llm.py
+                --- BEGIN CONTENT ---
+                import logging
+                import os
+                from typing import List
+                
+                from .config import OPENAI_API_KEY, LLM_MODEL_NAME
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                class LLMClient:
+                    """
+                    LLM handler with multi-provider fallback.
+                
+                    Priority order:
+                    1️⃣ OpenAI
+                    2️⃣ Mistral API
+                    3️⃣ Local HuggingFace model
+                    """
+                
+                    def __init__(self):
+                
+                        self.provider = None
+                        self.client = None
+                        self.local_model = None
+                        self.tokenizer = None
+                
+                        mistral_key = os.getenv("MISTRAL_API_KEY")
+                
+                        # --------------------------------------------------
+                        # 1️⃣ OpenAI Provider
+                        # --------------------------------------------------
+                
+                        if OPENAI_API_KEY:
+                            try:
+                                from openai import OpenAI
+                
+                                self.client = OpenAI(api_key=OPENAI_API_KEY)
+                                self.provider = "openai"
+                
+                                logger.info("Using OpenAI provider.")
+                                return
+                
+                            except Exception as e:
+                                logger.warning(f"OpenAI initialization failed: {e}")
+                
+                        # --------------------------------------------------
+                        # 2️⃣ Mistral Provider
+                        # --------------------------------------------------
+                
+                        if mistral_key:
+                            try:
+                                from mistralai.client import MistralClient
+                
+                                self.client = MistralClient(api_key=mistral_key)
+                                self.provider = "mistral"
+                
+                                logger.info("Using Mistral API provider.")
+                                return
+                
+                            except Exception as e:
+                                logger.warning(f"Mistral initialization failed: {e}")
+                
+                        # --------------------------------------------------
+                        # 3️⃣ Local Model Fallback
+                        # --------------------------------------------------
+                
+                        try:
+                            logger.info("Falling back to local TinyLlama model.")
+                
+                            from transformers import AutoModelForCausalLM, AutoTokenizer
+                            import torch
+                
+                            model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+                
+                            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                
+                            self.local_model = AutoModelForCausalLM.from_pretrained(
+                                model_name,
+                                torch_dtype=torch.float16,
+                                device_map="auto"
+                            )
+                
+                            self.provider = "local"
+                
+                            logger.info("Local TinyLlama loaded successfully.")
+                
+                        except Exception as e:
+                            logger.error("Failed to load any LLM provider.")
+                            raise RuntimeError(f"No LLM available: {e}")
+                
+                    # --------------------------------------------------
+                
+                    def generate_answer(self, question: str, context_documents: List[str]) -> str:
+                        """
+                        Generate answer using retrieved context documents.
+                        """
+                
+                        # ------------------------------
+                        # Validation (from old stable code)
+                        # ------------------------------
+                
+                        if not isinstance(question, str) or not question.strip():
+                            raise ValueError("Question must be a non-empty string.")
+                
+                        if not context_documents:
+                            raise ValueError("Context documents cannot be empty.")
+                
+                        context = "\n\n".join(context_documents)
+                
+                        prompt = f"""
+                You are an AI bookkeeping assistant for a platform called Hellobooks.
+                
+                Use the provided context to answer the user's question clearly and accurately.
+                If the answer is not found in the context, say you do not have enough information.
+                
+                Context:
+                {context}
+                
+                Question:
+                {question}
+                
+                Answer:
+                """
+                
+                        # --------------------------------------------------
+                        # OpenAI
+                        # --------------------------------------------------
+                
+                        if self.provider == "openai":
+                
+                            try:
+                
+                                response = self.client.chat.completions.create(
+                                    model=LLM_MODEL_NAME,
+                                    messages=[
+                                        {"role": "system", "content": "You are a helpful accounting assistant."},
+                                        {"role": "user", "content": prompt},
+                                    ],
+                                    temperature=0.2,
+                                )
+                
+                                answer = response.choices[0].message.content.strip()
+                
+                                if not answer:
+                                    raise ValueError("LLM returned an empty response.")
+                
+                                return answer
+                
+                            except Exception as e:
+                                logger.error(f"OpenAI generation failed: {e}")
+                                raise RuntimeError(f"OpenAI generation failed: {e}")
+                
+                        # --------------------------------------------------
+                        # Mistral API
+                        # --------------------------------------------------
+                
+                        if self.provider == "mistral":
+                
+                            try:
+                
+                                response = self.client.chat(
+                                    model="mistral-medium",
+                                    messages=[{"role": "user", "content": prompt}]
+                                )
+                
+                                answer = response.choices[0].message.content.strip()
+                
+                                if not answer:
+                                    raise ValueError("Mistral returned an empty response.")
+                
+                                return answer
+                
+                            except Exception as e:
+                                logger.error(f"Mistral generation failed: {e}")
+                                raise RuntimeError(f"Mistral generation failed: {e}")
+                
+                        # --------------------------------------------------
+                        # Local Model
+                        # --------------------------------------------------
+                
+                        if self.provider == "local":
+                
+                            try:
+                
+                                import torch
+                
+                                inputs = self.tokenizer(prompt, return_tensors="pt")
+                
+                                # safer tensor device move
+                                inputs = {k: v.to(self.local_model.device) for k, v in inputs.items()}
+                
+                                outputs = self.local_model.generate(
+                                    **inputs,
+                                    max_new_tokens=200,
+                                    temperature=0.3
+                                )
+                
+                                response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                
+                                # safer answer extraction
+                                if "Answer:" in response:
+                                    return response.split("Answer:")[-1].strip()
+                
+                                return response.strip()
+                
+                            except Exception as e:
+                                logger.error(f"Local generation failed: {e}")
+                                raise RuntimeError(f"Local LLM failed: {e}")
+                
+                        # --------------------------------------------------
+                
+                        raise RuntimeError("No LLM provider available.")
+                --- END CONTENT ---
+            📄 main.py
+                --- BEGIN CONTENT ---
+                import sys
+                import logging
+                
+                from .rag_pipeline import RAGPipeline
+                from .config import print_config_summary
+                
+                # --------------------------------------------------
+                # Logging Configuration
+                # --------------------------------------------------
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                # --------------------------------------------------
+                # CLI Interface
+                # --------------------------------------------------
+                
+                def run_cli():
+                    """
+                    Runs the command line AI assistant.
+                    """
+                
+                    try:
+                        print_config_summary()
+                
+                        rag = RAGPipeline()
+                
+                        print("\nHellobooks AI Assistant")
+                        print("Type your accounting question or type 'exit' to quit.\n")
+                
+                        while True:
+                            try:
+                                user_question = input("Question: ").strip()
+                
+                                if not user_question:
+                                    print("Please enter a valid question.\n")
+                                    continue
+                
+                                if user_question.lower() in ["exit", "quit"]:
+                                    print("Exiting assistant. Goodbye.")
+                                    break
+                
+                                answer = rag.ask(user_question)
+                
+                                print("\nAnswer:")
+                                print(answer)
+                                print("\n" + "-" * 50 + "\n")
+                
+                            except KeyboardInterrupt:
+                                print("\nSession interrupted. Exiting safely.")
+                                break
+                
+                            except Exception as e:
+                                logger.error(f"Error processing question: {e}")
+                                print("An error occurred while processing your request.\n")
+                
+                    except Exception as e:
+                        logger.error(f"Application startup failed: {e}")
+                        print("Failed to start the AI assistant.")
+                        sys.exit(1)
+                
+                
+                # --------------------------------------------------
+                # Program Entry Point
+                # --------------------------------------------------
+                
+                if __name__ == "__main__":
+                    run_cli()
+                --- END CONTENT ---
+            📄 rag_pipeline.py
+                --- BEGIN CONTENT ---
+                import logging
+                from typing import List
+                
+                from .embedder import Embedder
+                from .retriever import Retriever
+                from .llm import LLMClient
+                
+                
+                # --------------------------------------------------
+                # Logging Configuration
+                # --------------------------------------------------
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                # --------------------------------------------------
+                # RAG Pipeline
+                # --------------------------------------------------
+                
+                class RAGPipeline:
+                    """
+                    Orchestrates the Retrieval-Augmented Generation workflow.
+                    """
+                
+                    def __init__(self):
+                        try:
+                            logger.info("Initializing RAG pipeline components...")
+                
+                            self.embedder = Embedder()
+                            self.retriever = Retriever()
+                            self.llm = LLMClient()
+                
+                            logger.info("RAG pipeline initialized successfully.")
+                
+                        except Exception as e:
+                            logger.error("Failed to initialize RAG pipeline.")
+                            raise RuntimeError(f"Pipeline initialization error: {e}")
+                
+                    # --------------------------------------------------
+                
+                    def ask(self, question: str) -> str:
+                        """
+                        Processes a user question through the RAG pipeline.
+                        """
+                
+                        if not isinstance(question, str) or not question.strip():
+                            raise ValueError("Question must be a non-empty string.")
+                
+                        try:
+                            logger.info("Embedding user question...")
+                            query_embedding = self.embedder.embed_text(question)
+                
+                            logger.info("Retrieving relevant documents...")
+                            retrieved_docs = self.retriever.search(query_embedding)
+                
+                            if not retrieved_docs:
+                                logger.warning("No documents retrieved for query.")
+                                return "I could not find relevant information in the knowledge base."
+                
+                            logger.info("Generating response from LLM...")
+                            answer = self.llm.generate_answer(question, retrieved_docs)
+                
+                            return answer
+                
+                        except Exception as e:
+                            logger.error(f"Error in RAG pipeline: {e}")
+                            raise RuntimeError(f"Failed to process question: {e}")
+                --- END CONTENT ---
+            📄 retriever.py
+                --- BEGIN CONTENT ---
+                import os
+                import pickle
+                import logging
+                import numpy as np
+                import faiss
+                from typing import List
+                
+                from .config import VECTOR_STORE_PATH, TOP_K_RESULTS
+                
+                
+                # --------------------------------------------------
+                # Logging
+                # --------------------------------------------------
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                # --------------------------------------------------
+                # Retriever Class
+                # --------------------------------------------------
+                
+                class Retriever:
+                    """
+                    Handles similarity search using FAISS.
+                    """
+                
+                    def __init__(self):
+                        try:
+                            self.index_path = VECTOR_STORE_PATH / "faiss_index.bin"
+                            self.metadata_path = VECTOR_STORE_PATH / "documents.pkl"
+                
+                            if not self.index_path.exists():
+                                raise FileNotFoundError(
+                                    f"FAISS index not found at {self.index_path}. "
+                                    "Run the indexing script first."
+                                )
+                
+                            if not self.metadata_path.exists():
+                                raise FileNotFoundError(
+                                    f"Document metadata not found at {self.metadata_path}. "
+                                    "Run the indexing script first."
+                                )
+                
+                            logger.info("Loading FAISS index...")
+                            self.index = faiss.read_index(str(self.index_path))
+                
+                            logger.info("Loading document metadata...")
+                            with open(self.metadata_path, "rb") as f:
+                                self.documents = pickle.load(f)
+                
+                            logger.info("Retriever initialized successfully.")
+                
+                        except Exception as e:
+                            logger.error("Failed to initialize retriever.")
+                            raise RuntimeError(f"Retriever initialization failed: {e}")
+                
+                    # --------------------------------------------------
+                
+                    def search(self, query_embedding: List[float]) -> List[str]:
+                        """
+                        Perform similarity search using FAISS.
+                        """
+                
+                        if not query_embedding:
+                            raise ValueError("Query embedding cannot be empty.")
+                
+                        try:
+                            query_vector = np.array([query_embedding]).astype("float32")
+                
+                            distances, indices = self.index.search(query_vector, TOP_K_RESULTS)
+                
+                            results = []
+                
+                            for idx in indices[0]:
+                                if idx < len(self.documents):
+                                    results.append(self.documents[idx])
+                
+                            return results
+                
+                        except Exception as e:
+                            logger.error("Error during vector search.")
+                            raise RuntimeError(f"Vector search failed: {e}")
+                --- END CONTENT ---
+        📁 knowledge_base/
+            📄 balance_sheet.md
+                --- BEGIN CONTENT ---
+                --- END CONTENT ---
+            📄 bookkeeping.md
+                --- BEGIN CONTENT ---
+                --- END CONTENT ---
+            📄 cash_flow.md
+                --- BEGIN CONTENT ---
+                --- END CONTENT ---
+            📄 invoices.md
+                --- BEGIN CONTENT ---
+                --- END CONTENT ---
+            📄 profit_loss.md
+                --- BEGIN CONTENT ---
+                --- END CONTENT ---
+        📁 scripts/
+            📄 build_index.py
+                --- BEGIN CONTENT ---
+                import os
+                import sys
+                import pickle
+                import logging
+                import numpy as np
+                import faiss
+                from pathlib import Path
+                
+                # --------------------------------------------------
+                # Add project root to Python path
+                # --------------------------------------------------
+                
+                CURRENT_DIR = Path(__file__).resolve()
+                PROJECT_ROOT = CURRENT_DIR.parent.parent
+                sys.path.append(str(PROJECT_ROOT))
+                
+                # --------------------------------------------------
+                # Imports from app
+                # --------------------------------------------------
+                
+                from app.embedder import Embedder
+                from app.config import KNOWLEDGE_BASE_PATH, VECTOR_STORE_PATH
+                
+                
+                # --------------------------------------------------
+                # Logging
+                # --------------------------------------------------
+                
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
+                
+                
+                # --------------------------------------------------
+                # Load Knowledge Documents
+                # --------------------------------------------------
+                
+                def load_documents():
+                    """
+                    Loads all markdown documents from the knowledge base directory.
+                    """
+                
+                    documents = []
+                
+                    try:
+                        if not KNOWLEDGE_BASE_PATH.exists():
+                            raise FileNotFoundError(
+                                f"Knowledge base directory not found: {KNOWLEDGE_BASE_PATH}"
+                            )
+                
+                        for file in KNOWLEDGE_BASE_PATH.glob("*.md"):
+                            try:
+                                with open(file, "r", encoding="utf-8") as f:
+                                    content = f.read().strip()
+                
+                                    if content:
+                                        documents.append(content)
+                                    else:
+                                        logger.warning(f"Empty file skipped: {file}")
+                
+                            except Exception as file_error:
+                                logger.warning(f"Failed to read file {file}: {file_error}")
+                
+                        if not documents:
+                            raise ValueError("No valid documents found in knowledge base.")
+                
+                        logger.info(f"{len(documents)} documents loaded successfully.")
+                
+                        return documents
+                
+                    except Exception as e:
+                        logger.error(f"Document loading failed: {e}")
+                        raise
+                
+                
+                # --------------------------------------------------
+                # Build FAISS Index
+                # --------------------------------------------------
+                
+                def build_faiss_index(embeddings):
+                
+                    try:
+                        embedding_dim = len(embeddings[0])
+                
+                        index = faiss.IndexFlatL2(embedding_dim)
+                
+                        vectors = np.array(embeddings).astype("float32")
+                
+                        index.add(vectors)
+                
+                        return index
+                
+                    except Exception as e:
+                        logger.error("FAISS index creation failed.")
+                        raise RuntimeError(f"FAISS index error: {e}")
+                
+                
+                # --------------------------------------------------
+                # Save Vector Store
+                # --------------------------------------------------
+                
+                def save_vector_store(index, documents):
+                
+                    try:
+                        VECTOR_STORE_PATH.mkdir(parents=True, exist_ok=True)
+                
+                        index_file = VECTOR_STORE_PATH / "faiss_index.bin"
+                        metadata_file = VECTOR_STORE_PATH / "documents.pkl"
+                
+                        faiss.write_index(index, str(index_file))
+                
+                        with open(metadata_file, "wb") as f:
+                            pickle.dump(documents, f)
+                
+                        logger.info("Vector store saved successfully.")
+                        logger.info(f"Index file: {index_file}")
+                        logger.info(f"Metadata file: {metadata_file}")
+                
+                    except Exception as e:
+                        logger.error("Failed to save vector store.")
+                        raise RuntimeError(f"Vector store saving failed: {e}")
+                
+                
+                # --------------------------------------------------
+                # Main Index Build Process
+                # --------------------------------------------------
+                
+                def main():
+                
+                    try:
+                        logger.info("Starting knowledge base indexing...")
+                
+                        documents = load_documents()
+                
+                        embedder = Embedder()
+                
+                        logger.info("Generating embeddings...")
+                        embeddings = embedder.embed_documents(documents)
+                
+                        if not embeddings:
+                            raise ValueError("Embedding generation returned empty result.")
+                
+                        logger.info("Creating FAISS index...")
+                        index = build_faiss_index(embeddings)
+                
+                        save_vector_store(index, documents)
+                
+                        logger.info("Indexing completed successfully.")
+                
+                    except Exception as e:
+                        logger.error(f"Indexing process failed: {e}")
+                        sys.exit(1)
+                
+                
+                # --------------------------------------------------
+                # Entry Point
+                # --------------------------------------------------
+                
+                if __name__ == "__main__":
+                    main()
+                --- END CONTENT ---

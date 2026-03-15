@@ -1,0 +1,27 @@
+{
+  "hashes": {
+    ".env": "80f3948d1d47f02086814adab8e2b15c14d430adccdc15649a658b8497de29f2",
+    "Dockerfile": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "README.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "requirements.txt": "d1b90aca31d05a414419f59d24cf9fcceb784d4d58a5a7bf4000fca47261027b",
+    "app\\config.py": "dd5fee28a5277a63fd09436ac0fcb5a3a38b1f349a02b61056ed3a8821b42a33",
+    "app\\embedder.py": "797540f44a2fb047c0e526d282be7afa5f4a833d39acb20405f1cca4b78174f2",
+    "app\\llm.py": "0d517ee4689a48e4317c9919d62f17b949c721ae9a979d0a7dfeab2f387abde4",
+    "app\\main.py": "0524a29150a30d7ce60b335d6f577abf1960e1d74077ad2e3ecfc51281ced913",
+    "app\\rag_pipeline.py": "d1e1de87aaf4640942f1d32452f6dbfd2c2b5ffbaa1c26ae5695bd46fd059c92",
+    "app\\retriever.py": "12f153e9c9b047edab4a837f1cd8f93df47874809d7bad1bce779f5f6e1865b5",
+    "knowledge_base\\balance_sheet.md": "b2f3e285737ec619958bacbab97e40b1f242086db5306e7273c8449afdfea281",
+    "knowledge_base\\bookkeeping.md": "84036abb39ca7a8baf6449d7815b210cc332fab95c7396ae345fbedc1a8bb20c",
+    "knowledge_base\\cash_flow.md": "b5e4e2100fb0e106013aa3191b7c5ece473bd02d93a1fcfd51025126f25fe5a6",
+    "knowledge_base\\invoices.md": "b64542068befbf99cc3705a12a648f6c4ab45b7a0a9aef667816f3901c2687bf",
+    "knowledge_base\\profit_loss.md": "22428949075b1251071fc270e31aae41849d7e2820207fae1de2e5978acbfd89",
+    "Script\\backup.py": "7f993b27a5543f2db377993eed5058b7e78ad8dfd37bf456a3a3d519e28829d5",
+    "Script\\bootstrap_1.py": "6cd228a7312dc92a6fc8dd64c09a03a2e6a0a4b8658b41da7e8f83731b028672",
+    "Script\\DATA_RYZE.txt": "f094128f5aaaffb83cc130c6727e8547b1dee18027aaab4960930fac1a36c518",
+    "Script\\WORK_FLOW_DJANGO.docx": "1e6f6cf34746b4d963d88481c9416451339b70c51ccbb78fe567b8edfb29c035",
+    "scripts\\build_index.py": "262627594e9e56f6efab801f58bace3a52cf558aaee69f3ccd7214102dd44a81",
+    "vector_store\\documents.pkl": "a970ed01183e7a4bf21152018d2180f774c224fe2d7f6ccbc240d3b111866e2d",
+    "vector_store\\faiss_index.bin": "5d952c8ab31ad212098af79d0c99025f65a2316276f904f519266499287e1d74"
+  },
+  "timestamp": "20260315_162953"
+}
